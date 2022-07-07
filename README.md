@@ -1,2 +1,2 @@
 # MinecraftServerBackup
-a tool to Backuo saves on my minecraft server
+a tool to Backup saves on my minecraft server
