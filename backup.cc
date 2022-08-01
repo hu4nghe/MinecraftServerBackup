@@ -4,6 +4,7 @@
 #include <ctime>
 #include <string>
 #include <filesystem>
+#include <fmt/core.h>
 
 using namespace std;
 
@@ -13,25 +14,27 @@ using namespace std;
 
 static volatile unsigned int flag = 1;
 
-void signalHandler(int a)
-{
-        flag = 0;
-}
+void timePrint();
+void signalHandler(int a);
+
 
 int main()
 {
 
     signal(SIGINT,signalHandler);
 
-    auto t = time(NULL);
-    auto tm = *localtime(&t);
-
     const string newName = "save_";
+    int delay;
 
     string source,destination;
-    cout<<"Please enter the source path."<<"\n";
+    fmt::print("Please enter the source path.\n");
+    cin>>source;
+    fmt::print("Please enter the destination path.\n");
+    cin>>destination;
+    fmt::print("Please enter autosave time interval(in second).");
+    cin>>delay;
 
-
+    
 
     while(flag)
     {
@@ -40,31 +43,35 @@ int main()
         
         system("cp -r /home/huanghe/GithubRepo/MinecraftServerBackup/test/source/object /home/huanghe/GithubRepo/MinecraftServerBackup/test/destination");
 
-        system("pwd");
-        system("ls");
-
-        system("cd test/destination");
-
-        system("pwd");
-        system("ls");
-
-        rename("object",(newName + to_string(flag)).c_str());
-
-        system("pwd");
-        system("ls");
-
-        system("cd /home/huanghe/GithubRepo/MinecraftServerBackup/test/source");
-        
-        t = time(NULL);
-        tm = *localtime(&t);
-
-        printf("Save backuped at %d/%02d/%02d %02dh%02d\nNext Backup will be in 10 min.\n",
-                 tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min);
-        
+        timePrint(delay);
 
         sleep(15);
 
         flag ++;
     }
     return 0;  
+}
+
+/**
+ * @brief Print Current time and remind user when next backup will be saved.
+ * 
+ * @param delay 
+ */
+void timePrint(int delay)
+{
+    auto t = time(NULL);
+    auto tm = *localtime(&t);
+
+    fmt::print("Save backuped at {0}/{1}/{2} {3}h{4}.\nNext Backup will be in {6} min.\n",
+                tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min,delay);            
+}
+
+/**
+ * @brief A signal handler, makes the program stop when recive Ctrl + C.
+ * 
+ * @param a 
+ */
+void signalHandler(int a)
+{
+        flag = 0;
 }
