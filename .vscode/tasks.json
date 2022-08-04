@@ -10,6 +10,8 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
+                "-std=c++20",
+                "-lstdc++fs",
                 "-lstdc++",
                 "-lfmt"
             ],
