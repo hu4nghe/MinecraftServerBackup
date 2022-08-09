@@ -1,22 +1,18 @@
-#include <iostream>
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
-#include <string>
-#include <filesystem>
-#include <fmt/core.h>
+#include "Filebackup.h"
 
-using namespace std;
+namespace fs = std::filesystem;
+using std::string;
+using fmt::print;
 
-#include "signal.h"
-#include "unistd.h"
-
+#ifdef __unix__//Linux code
 
 static volatile unsigned int flag = 1;
 
-void timePrint();
+void timePrint(unsigned delay);
+void backUp(unsigned delay);
 void signalHandler(int a);
-
+void inputModification(fs::path &p);
+bool checkIfLeagal(fs::path &p);
 
 int main()
 {
@@ -24,31 +20,38 @@ int main()
     signal(SIGINT,signalHandler);
 
     const string newName = "save_";
-    int delay;
-
     string source,destination;
-    fmt::print("Please enter the source path.\n");
-    cin>>source;
-    fmt::print("Please enter the destination path.\n");
-    cin>>destination;
-    fmt::print("Please enter autosave time interval(in second).");
-    cin>>delay;
 
+    unsigned delay;
+    bool valid = false;
     
+    /**
+     * @brief input of source path.
+     */
+    print("Please enter the source path.\n");
+    std::cin>>source;
+    fs::path sourcePath(source);
+    valid = checkIfLeagal(sourcePath);
+    while(!valid)
+    {
+        inputModification(sourcePath);        
+    }
+
+    /**
+     * @brief input of time interval between two backup.
+     */
+    print("Please enter autosave time interval(in second).");
+    std::cin>>delay;
 
     while(flag)
     {
-
-        printf("%s\n",(newName + to_string(flag)).c_str());
-        
-        system("cp -r /home/huanghe/GithubRepo/MinecraftServerBackup/test/source/object /home/huanghe/GithubRepo/MinecraftServerBackup/test/destination");
-
+        fs::create_directories(sourcePath/"backUps");
+        string newPath = "/backUps/Save"+ std::to_string(flag); 
+        fs::rename(sourcePath/"world",sourcePath/newPath);
         timePrint(delay);
-
-        sleep(15);
-
-        flag ++;
+        sleep(delay);
     }
+
     return 0;  
 }
 
@@ -57,12 +60,12 @@ int main()
  * 
  * @param delay 
  */
-void timePrint(int delay)
+void timePrint(unsigned delay)
 {
     auto t = time(NULL);
     auto tm = *localtime(&t);
 
-    fmt::print("Save backuped at {0}/{1}/{2} {3}h{4}.\nNext Backup will be in {6} min.\n",
+    print("Save backuped at {0}/{1}/{2} {3}h{4}.\nNext Backup will be in {6} min.\n",
                 tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min,delay);            
 }
 
@@ -75,3 +78,20 @@ void signalHandler(int a)
 {
         flag = 0;
 }
+
+bool checkIfLeagal(fs::path &p)
+{
+    if(exists(p)) return true;
+    else return false;
+}
+
+void inputModification(fs::path &p)
+{
+    p.clear();
+    string newPath;
+    print("This path is invalide ! Please enter a valide path.");
+    std::cin>>newPath;
+    p.assign(newPath);
+}
+
+#endif//Linux code
